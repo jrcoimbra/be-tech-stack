@@ -3,7 +3,7 @@ name: Deploy to AWS using CloudFormation
 on:
   push:
     branches:
-      - main
+      - master
     paths:
       - 'infrastructure/ecs-service-dev.json'
 
