@@ -1,0 +1,220 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS CI/CD Pipeline for simple-api using CodePipeline, CodeBuild, and ECR",
+  "Resources": {
+    "ECRRepository": {
+      "Type": "AWS::ECR::Repository",
+      "Properties": {
+        "RepositoryName": "simple-api-repo"
+      }
+    },
+    "S3ArtifactBucket": {
+      "Type": "AWS::S3::Bucket",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "BucketEncryption": {
+          "ServerSideEncryptionConfiguration": [
+            {
+              "ServerSideEncryptionByDefault": {
+                "SSEAlgorithm": "AES256"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "CodeBuildServiceRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codebuild.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CodeBuildPolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "ecr:GetDownloadUrlForLayer",
+                    "ecr:BatchGetImage",
+                    "ecr:BatchCheckLayerAvailability",
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CodeBuildProject": {
+      "Type": "AWS::CodeBuild::Project",
+      "Properties": {
+        "Name": "simple-api-build",
+        "Artifacts": {
+          "Type": "NO_ARTIFACTS"
+        },
+        "Environment": {
+          "Type": "LINUX_CONTAINER",
+          "ComputeType": "BUILD_GENERAL1_SMALL",
+          "Image": "aws/codebuild/standard:5.0",
+          "PrivilegedMode": true,
+          "EnvironmentVariables": [
+            {
+              "Name": "REPOSITORY_URI",
+              "Value": {
+                "Fn::GetAtt": ["ECRRepository", "RepositoryUri"]
+              }
+            }
+          ]
+        },
+        "Source": {
+          "Type": "GITHUB",
+          "Location": "https://github.com/jrcoimbra/be_tech_stack.git",
+          "BuildSpec": "buildspec.yml"
+        },
+        "ServiceRole": {
+          "Fn::GetAtt": ["CodeBuildServiceRole", "Arn"]
+        }
+      }
+    },
+    "CodePipelineRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "codepipeline.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": "CodePipelinePolicy",
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "codebuild:BatchGetBuilds",
+                    "codebuild:StartBuild"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "CodePipeline": {
+      "Type": "AWS::CodePipeline::Pipeline",
+      "Properties": {
+        "Name": "simple-api-pipeline",
+        "RoleArn": {
+          "Fn::GetAtt": ["CodePipelineRole", "Arn"]
+        },
+        "ArtifactStores": [
+          {
+            "Region": "us-east-1",
+            "ArtifactStore": {
+              "Type": "S3",
+              "Location": {
+                "Ref": "S3ArtifactBucket"
+              }
+            }
+          }
+        ],
+        "Stages": [
+          {
+            "Name": "Source",
+            "Actions": [
+              {
+                "Name": "SourceAction",
+                "ActionTypeId": {
+                  "Category": "Source",
+                  "Owner": "ThirdParty",
+                  "Version": "1",
+                  "Provider": "GitHub"
+                },
+                "OutputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "Configuration": {
+                  "Owner": "YOUR_GITHUB_USERNAME",
+                  "Repo": "YOUR_REPO_NAME",
+                  "Branch": "main",
+                  "OAuthToken": {
+                    "Ref": "GitHubToken"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "Name": "Build",
+            "Actions": [
+              {
+                "Name": "BuildAction",
+                "ActionTypeId": {
+                  "Category": "Build",
+                  "Owner": "AWS",
+                  "Version": "1",
+                  "Provider": "CodeBuild"
+                },
+                "InputArtifacts": [
+                  {
+                    "Name": "SourceOutput"
+                  }
+                ],
+                "Configuration": {
+                  "ProjectName": {
+                    "Ref": "CodeBuildProject"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Parameters": {
+    "GitHubToken": {
+      "Description": "GitHub OAuth Token",
+      "Type": "String",
+      "NoEcho": true
+    }
+  },
+  "Outputs": {
+    "ECRRepositoryUrl": {
+      "Description": "URL of the ECR Repository",
+      "Value": {
+        "Fn::GetAtt": ["ECRRepository", "RepositoryUri"]
+      }
+    }
+  }
+}
