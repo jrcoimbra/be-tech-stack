@@ -1,4 +1,4 @@
-name: Deploy to AWS using CloudFormation
+name: Deployment to AWS using CloudFormation
 
 on:
   push:
