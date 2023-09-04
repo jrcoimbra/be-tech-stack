@@ -104,7 +104,11 @@
               "Principal": {
                 "Service": "codepipeline.amazonaws.com"
               },
-              "Action": "sts:AssumeRole"
+              "Action": [ 
+                "sts:AssumeRole",
+                "codestar-connections:UseConnection",
+                "codestar-connections:GetConnection"
+              ]
             }
           ]
         },
@@ -118,7 +122,9 @@
                   "Effect": "Allow",
                   "Action": [
                     "codebuild:BatchGetBuilds",
-                    "codebuild:StartBuild"
+                    "codebuild:StartBuild",
+                    "codestar-connections:UseConnection",
+                    "codestar-connections:GetConnection"
                   ],
                   "Resource": "*"
                 }
