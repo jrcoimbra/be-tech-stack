@@ -165,7 +165,7 @@
                 ],
                 "Configuration": {
                   "Owner": "jrcoimbra",
-                  "Repo": "be_tech_stack",
+                  "Repo": "be-tech-stack",
                   "Branch": "master",
                   "OAuthToken": {
                     "Ref": "GitHubToken"
