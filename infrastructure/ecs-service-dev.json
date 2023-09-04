@@ -105,9 +105,7 @@
                 "Service": "codepipeline.amazonaws.com"
               },
               "Action": [ 
-                "sts:AssumeRole",
-                "codestar-connections:UseConnection",
-                "codestar-connections:GetConnection"
+                "sts:AssumeRole"
               ]
             }
           ]
