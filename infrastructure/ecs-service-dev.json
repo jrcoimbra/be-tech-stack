@@ -164,9 +164,9 @@
                   }
                 ],
                 "Configuration": {
-                  "Owner": "YOUR_GITHUB_USERNAME",
-                  "Repo": "YOUR_REPO_NAME",
-                  "Branch": "main",
+                  "Owner": "jrcoimbra",
+                  "Repo": "be_tech_stack",
+                  "Branch": "master",
                   "OAuthToken": {
                     "Ref": "GitHubToken"
                   }
