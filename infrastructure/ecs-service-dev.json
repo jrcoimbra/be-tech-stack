@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "AWS CI-CD Pipeline for simple-api using CodePipeline, CodeBuild, and ECR",
+  "Description": "AWS CI-CD Pipeline for this simple-api using CodePipeline, CodeBuild, and ECR",
   "Resources": {
     "ECRRepository": {
       "Type": "AWS::ECR::Repository",
